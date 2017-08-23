@@ -18,10 +18,16 @@ public class GameplayController : MonoBehaviour {
     [SerializeField]
     private GameObject readyButton;
 
+    [SerializeField]
+    private AudioClip fallingRestart, deadHighScore, deadFailure;
+
+    private GameObject camera;
+
     private void Awake()
     {
         MakeInstance();
         gameOverPanel.SetActive(false);
+        camera = GameObject.FindGameObjectWithTag("MainCamera");
     }
 
     // Use this for initialization
@@ -35,20 +41,45 @@ public class GameplayController : MonoBehaviour {
         }
     }
 
-    public void GameOverShowPanel(int finalScore, int finalCoinScore)
+    public void GameOverShowPanel(int finalScore, int finalCoinScore, bool improvedFlag)
     {
         gameOverPanel.SetActive(true);
         gameOverScoreText.text = finalScore.ToString();
         gameOverCoinText.text = finalCoinScore.ToString();
         //go to main menu after 3 seconds
-        StartCoroutine(GameOverLoadMainMenu());
+        StartCoroutine(GameOverLoadMainMenu(improvedFlag));
     }
 
-    IEnumerator GameOverLoadMainMenu ()
+    IEnumerator GameOverLoadMainMenu(bool improvedFlag)
     {
+
+        if (improvedFlag)
+        {
+            AudioSource.PlayClipAtPoint(deadHighScore, camera.transform.position,0.2f);
+        }
+        else
+        {
+            AudioSource.PlayClipAtPoint(deadFailure, camera.transform.position,0.3f);
+        }
         yield return new WaitForSeconds(4f);
-        SceneManager.LoadScene("Main Menu");
+        SceneFader.instance.LoadLevel("Main Menu");
     }
+
+    public void PlayerDiedRestartTheGame()
+    {
+        StartCoroutine(PlayerDiedRestart());
+    }
+
+    IEnumerator PlayerDiedRestart()
+    {
+        AudioSource.PlayClipAtPoint(fallingRestart, camera.transform.position,0.3f);
+        yield return new WaitForSeconds(1f);
+        SceneFader.instance.LoadLevel("Gameplay");
+    }
+
+
+
+
 
     public void SetScore(int score)
     {
@@ -80,7 +111,7 @@ public class GameplayController : MonoBehaviour {
     public void QuitGame()
     {
         Time.timeScale = 1f;
-        SceneManager.LoadScene("Main Menu");
+        SceneFader.instance.LoadLevel("Main Menu");
     }
 
     public void StartTheGame()

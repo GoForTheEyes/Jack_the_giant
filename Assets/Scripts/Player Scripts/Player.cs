@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityStandardAssets.CrossPlatformInput;
 
 public class Player : MonoBehaviour {
 
@@ -10,6 +11,13 @@ public class Player : MonoBehaviour {
     private Rigidbody2D myBody;
     private Animator anim;
 
+    private AudioSource audioSource;
+
+    private float lastYPosition;
+
+    [SerializeField]
+    private AudioClip stepSound;
+
     private void Awake()
     {
         myBody = GetComponent<Rigidbody2D>();
@@ -18,19 +26,21 @@ public class Player : MonoBehaviour {
 
     // Use this for initialization
     void Start () {
-		
+        audioSource = GetComponent<AudioSource>();
+        lastYPosition = transform.position.y;
 	}
 	
 	// FixedUpdate is the best option when acting on the physics engine
 	void FixedUpdate () {
         PlayerMoveKeyboard();
+        PlayerJumping();
 	}
 
     void PlayerMoveKeyboard()
     {
         float forceX = 0f;
         float vel = Mathf.Abs(myBody.velocity.x);
-        float h = Input.GetAxisRaw("Horizontal");
+        float h = CrossPlatformInputManager.GetAxisRaw("Horizontal");
         if (h>0) //going right
         {
             if (vel < maxVelocity)
@@ -42,6 +52,8 @@ public class Player : MonoBehaviour {
             transform.localScale = temp;
 
             anim.SetBool("Walk", true);
+            //PlayMovementClip();
+
         } else if (h<0) //going left
         {
             if (vel < maxVelocity)
@@ -52,6 +64,7 @@ public class Player : MonoBehaviour {
             temp.x = -1.3f;
             transform.localScale = temp;
             anim.SetBool("Walk", true);
+            //PlayMovementClip();
 
         } else
         {
@@ -63,5 +76,30 @@ public class Player : MonoBehaviour {
 
         myBody.AddForce(new Vector2(forceX, 0));
     }
+
+
+    void PlayMovementClip ()
+    {
+        if (!audioSource.isPlaying)
+        {
+            audioSource.clip = stepSound;
+            audioSource.Play();
+        }
+    }
+
+    void PlayerJumping()
+    {
+        if (transform.position.y < lastYPosition)
+        {
+            if (audioSource.isPlaying)
+            {
+                audioSource.Stop();
+            }
+            lastYPosition = transform.position.y;
+        }
+        
+    }
+
+
 
 }
